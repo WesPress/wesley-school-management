@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wesley Preparatory School Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f1f5f9;
+      color: #172554;
+    }
+    header {
+      background: #123b70;
+      color: white;
+      padding: 22px 15px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; font-size: 23px; }
+    header p { margin: 0; }
+    main {
+      max-width: 850px;
+      margin: 22px auto;
+      padding: 0 14px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #00000012;
+    }
+    h2 { color: #123b70; margin-top: 0; }
+    label { display: block; margin-top: 12px; font-weight: bold; }
+    input, select, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+    button {
+      background: #123b70;
+      color: white;
+      border: 0;
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    .notice { line-height: 1.6; color: #475569; }
+    footer { text-align: center; padding: 20px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WESLEY PREPARATORY SCHOOL</h1>
+    <p>Knowledge and Integrity</p>
+    <p>School Management System</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Welcome, Administrator</h2>
+      <p class="notice">
+        This is the starting page for the school's online management system.
+        The system will support student records, fees, receipts, attendance,
+        examination results, staff accounts and reports.
+      </p>
+      <p><strong>Academic year:</strong> 2026/2027</p>
+      <p><strong>Location:</strong> Wesley Methodist Church Premises, Assorko Essaman, Shama, Ghana</p>
+    </section>
+
+    <section class="card">
+      <h2>Student Registration — Preview</h2>
+      <p class="notice">
+        This form is a visual preview only. It does not save student information yet.
+      </p>
+
+      <form id="studentForm">
+        <label for="studentName">Student's full name</label>
+        <input id="studentName" type="text" placeholder="Enter full name" required>
+
+        <label for="admissionNumber">Admission number</label>
+        <input id="admissionNumber" type="text" placeholder="Enter admission number" required>
+
+        <label for="className">Class</label>
+        <select id="className" required>
+          <option value="">Select class</option>
+          <option>Creche</option>
+          <option>Nursery 1</option>
+          <option>Nursery 2</option>
+          <option>KG 1</option>
+          <option>KG 2</option>
+          <option>Basic 1</option>
+          <option>Basic 2</option>
+          <option>Basic 3</option>
+          <option>Basic 4</option>
+          <option>Basic 5</option>
+          <option>Basic 6</option>
+        </select>
+
+        <label for="guardianName">Parent/Guardian name</label>
+        <input id="guardianName" type="text" placeholder="Enter parent or guardian">
+
+        <button type="submit">Preview Registration</button>
+      </form>
+      <p id="message" role="status"></p>
+    </section>
+  </main>
+
+  <footer>
+    Wesley Preparatory School · Knowledge and Integrity
+  </footer>
+
+  <script>
+    document.getElementById("studentForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      document.getElementById("message").textContent =
+        "Preview only: no student record has been saved. Database connection is not yet configured.";
+    });
+  </script>
+</body>
+      </html>
