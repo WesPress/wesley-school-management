@@ -1,125 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wesley Preparatory School Management System</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f1f5f9;
-      color: #172554;
-    }
-    header {
-      background: #123b70;
-      color: white;
-      padding: 22px 15px;
-      text-align: center;
-    }
-    header h1 { margin: 0 0 8px; font-size: 23px; }
-    header p { margin: 0; }
-    main {
-      max-width: 850px;
-      margin: 22px auto;
-      padding: 0 14px;
-    }
-    .card {
-      background: white;
-      padding: 20px;
-      margin-bottom: 18px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px #00000012;
-    }
-    h2 { color: #123b70; margin-top: 0; }
-    label { display: block; margin-top: 12px; font-weight: bold; }
-    input, select, button {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      border: 1px solid #cbd5e1;
-      border-radius: 7px;
-      font-size: 16px;
-    }
-    button {
-      background: #123b70;
-      color: white;
-      border: 0;
-      margin-top: 16px;
-      font-weight: bold;
-    }
-    .notice { line-height: 1.6; color: #475569; }
-    footer { text-align: center; padding: 20px; color: #64748b; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wesley Preparatory School</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172554}
+header{background:#123b70;color:white;text-align:center;padding:22px 12px}
+header h1{font-size:22px;margin:0 0 8px}
+main{max-width:900px;margin:20px auto;padding:0 12px}
+.card{background:white;padding:18px;margin-bottom:16px;border-radius:12px;box-shadow:0 2px 8px #0001}
+h2{color:#123b70;margin-top:0}
+label{display:block;font-weight:bold;margin-top:12px}
+input,select,button{box-sizing:border-box;width:100%;padding:12px;margin-top:6px;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}
+button{background:#123b70;color:white;border:0;cursor:pointer;font-weight:bold}
+button.secondary{background:#475569}
+button:disabled{opacity:.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.hidden{display:none}
+.notice{line-height:1.5;color:#475569}
+#message{white-space:pre-wrap;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px;border-bottom:1px solid #e2e8f0}
+.table-wrap{overflow-x:auto}
+footer{text-align:center;color:#64748b;padding:20px}
+</style>
 </head>
 <body>
-  <header>
-    <h1>WESLEY PREPARATORY SCHOOL</h1>
-    <p>Knowledge and Integrity</p>
-    <p>School Management System</p>
-  </header>
+<header>
+  <h1>WESLEY PREPARATORY SCHOOL</h1>
+  <p>Knowledge and Integrity</p>
+  <p>School Management System</p>
+</header>
 
-  <main>
-    <section class="card">
-      <h2>Welcome, Administrator</h2>
-      <p class="notice">
-        This is the starting page for the school's online management system.
-        The system will support student records, fees, receipts, attendance,
-        examination results, staff accounts and reports.
-      </p>
-      <p><strong>Academic year:</strong> 2026/2027</p>
-      <p><strong>Location:</strong> Wesley Methodist Church Premises, Assorko Essaman, Shama, Ghana</p>
-    </section>
+<main>
+  <section class="card" id="setup">
+    <h2>Connect to school database</h2>
+    <p class="notice">Enter your Supabase Project URL and Publishable key. These are saved only in this browser.</p>
+    <label for="projectUrl">Supabase Project URL</label>
+    <input id="projectUrl" placeholder="https://your-project.supabase.co">
+    <label for="publishableKey">Supabase Publishable key</label>
+    <input id="publishableKey" placeholder="Paste your publishable key">
+    <button id="connectBtn">Connect</button>
+  </section>
 
-    <section class="card">
-      <h2>Student Registration — Preview</h2>
-      <p class="notice">
-        This form is a visual preview only. It does not save student information yet.
-      </p>
+  <section class="card hidden" id="login">
+    <h2>Administrator sign-in</h2>
+    <form id="loginForm">
+      <label for="email">Email address</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+  </section>
 
-      <form id="studentForm">
-        <label for="studentName">Student's full name</label>
-        <input id="studentName" type="text" placeholder="Enter full name" required>
+  <section class="card hidden" id="dashboard">
+    <h2>School Administration</h2>
+    <p id="welcome"></p>
+    <button class="secondary" id="logoutBtn">Sign out</button>
+  </section>
 
-        <label for="admissionNumber">Admission number</label>
-        <input id="admissionNumber" type="text" placeholder="Enter admission number" required>
+  <section class="card hidden" id="registration">
+    <h2>Register a student</h2>
+    <form id="studentForm">
+      <div class="grid">
+        <div>
+          <label for="studentNumber">Student number</label>
+          <input id="studentNumber" required maxlength="50">
+        </div>
+        <div>
+          <label for="firstName">First name</label>
+          <input id="firstName" required maxlength="100">
+        </div>
+        <div>
+          <label for="middleName">Middle name (optional)</label>
+          <input id="middleName" maxlength="100">
+        </div>
+        <div>
+          <label for="lastName">Last name</label>
+          <input id="lastName" required maxlength="100">
+        </div>
+        <div>
+          <label for="dob">Date of birth</label>
+          <input id="dob" type="date">
+        </div>
+        <div>
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option value="">Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div>
+          <label for="admissionDate">Admission date</label>
+          <input id="admissionDate" type="date">
+        </div>
+      </div>
+      <button type="submit">Save student</button>
+    </form>
+  </section>
 
-        <label for="className">Class</label>
-        <select id="className" required>
-          <option value="">Select class</option>
-          <option>Creche</option>
-          <option>Nursery 1</option>
-          <option>Nursery 2</option>
-          <option>KG 1</option>
-          <option>KG 2</option>
-          <option>Basic 1</option>
-          <option>Basic 2</option>
-          <option>Basic 3</option>
-          <option>Basic 4</option>
-          <option>Basic 5</option>
-          <option>Basic 6</option>
-        </select>
+  <section class="card hidden" id="studentRecords">
+    <h2>Student records</h2>
+    <label for="search">Search by student number or name</label>
+    <input id="search" placeholder="Type to search">
+    <button id="refreshBtn" class="secondary">Refresh student list</button>
+    <p id="count"></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Student number</th><th>Student name</th><th>Date of birth</th><th>Gender</th></tr></thead>
+        <tbody id="studentRows"></tbody>
+      </table>
+    </div>
+  </section>
 
-        <label for="guardianName">Parent/Guardian name</label>
-        <input id="guardianName" type="text" placeholder="Enter parent or guardian">
+  <section class="card">
+    <p id="message" role="status" class="notice">Connect your school database to begin.</p>
+  </section>
+</main>
 
-        <button type="submit">Preview Registration</button>
-      </form>
-      <p id="message" role="status"></p>
-    </section>
-  </main>
+<footer>Wesley Preparatory School · Knowledge and Integrity</footer>
 
-  <footer>
-    Wesley Preparatory School · Knowledge and Integrity
-  </footer>
+<script>
+const $ = id => document.getElementById(id);
+let db = null;
+let allStudents = [];
+let busy = false;
 
-  <script>
-    document.getElementById("studentForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      document.getElementById("message").textContent =
-        "Preview only: no student record has been saved. Database connection is not yet configured.";
+function message(text) { $("message").textContent = text; }
+function show(id, yes = true) {
+  $(id).classList.toggle("hidden", !yes);
+}
+function setBusy(value) {
+  busy = value;
+  document.querySelectorAll("button").forEach(b => b.disabled = value);
+}
+
+function renderStudents() {
+  const q = $("search").value.trim().toLowerCase();
+  const rows = allStudents.filter(s =>
+    [s.student_number, s.first_name, s.middle_name, s.last_name]
+      .some(v => String(v || "").toLowerCase().includes(q))
+  );
+  $("count").textContent = rows.length + " student record(s) shown";
+  $("studentRows").replaceChildren();
+
+  rows.forEach(s => {
+    const tr = document.createElement("tr");
+    [
+      s.student_number,
+      [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" "),
+      s.date_of_birth || "—",
+      s.gender || "—"
+    ].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value || "—";
+      tr.appendChild(td);
     });
-  </script>
+    $("studentRows").appendChild(tr);
+  });
+}
+
+async function loadStudents() {
+  message("Loading student records…");
+  const { data, error } = await db
+    .from("students")
+    .select("student_number,first_name,middle_name,last_name,date_of_birth,gender")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    message("Could not load student records: " + error.message);
+    return;
+  }
+  allStudents = data || [];
+  renderStudents();
+  message("Student records loaded.");
+}
+
+async function checkAdministrator(user) {
+  const { data: profile, error } = await db
+    .from("staff_profiles")
+    .select("full_name,role,is_active")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw new Error("Could not verify administrator access: " + error.message);
+
+  if (!profile || profile.role !== "Administrator" || profile.is_active !== true) {
+    await db.auth.signOut();
+    throw new Error("Access denied. This account is not an active school administrator.");
+  }
+
+  $("welcome").textContent = "Signed in as " + (profile.full_name || user.email);
+  show("login", false);
+  show("dashboard");
+  show("registration");
+  show("studentRecords");
+  await loadStudents();
+}
+
+async function handleSession(session) {
+  if (!session || !session.user) {
+    show("login");
+    show("dashboard", false);
+    show("registration", false);
+    show("studentRecords", false);
+    return;
+  }
+  try {
+    await checkAdministrator(session.user);
+  } catch (e) {
+    show("dashboard", false);
+    show("registration", false);
+    show("studentRecords", false);
+    show("login");
+    message(e.message);
+  }
+}
+
+$("connectBtn").addEventListener("click", async () => {
+  const url = $("projectUrl").value.trim();
+  const key = $("publishableKey").value.trim();
+
+  if (!url.startsWith("https://") || !key) {
+    message("Enter a valid HTTPS Project URL and your Publishable key.");
+    return;
+  }
+
+  try {
+    new URL(url);
+    localStorage.setItem("wesley_project_url", url);
+    localStorage.setItem("wesley_publishable_key", key);
+    db = window.supabase.createClient(url, key);
+    show("setup", false);
+    show("login");
+    message("Database connection configured. Please sign in.");
+    const { data } = await db.auth.getSession();
+    await handleSession(data.session);
+    db.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => handleSession(session), 0);
+    });
+  } catch (e) {
+    message("Connection setup failed: " + e.message);
+  }
+});
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!db || busy) return;
+  setBusy(true);
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: $("email").value.trim(),
+      password: $("password").value
+    });
+    if (error) throw error;
+    await handleSession(data.session);
+  } catch (e) {
+    message("Sign-in failed: " + e.message);
+  } finally {
+    setBusy(false);
+  }
+});
+
+$("logoutBtn").addEventListener("click", async () => {
+  if (!db) return;
+  const { error } = await db.auth.signOut();
+  if (error) message("Sign-out failed: " + error.message);
+  else {
+    allStudents = [];
+    show("dashboard", false);
+    show("registration", false);
+    show("studentRecords", false);
+    show("login");
+    message("You have signed out.");
+  }
+});
+
+$("studentForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!db || busy) return;
+  setBusy(true);
+  const payload = {
+    student_number: $("studentNumber").value.trim(),
+    first_name: $("firstName").value.trim(),
+    middle_name: $("middleName").value.trim() || null,
+    last_name: $("lastName").value.trim(),
+    date_of_birth: $("dob").value || null,
+    gender: $("gender").value || null,
+    admission_date: $("admissionDate").value || null
+  };
+
+  try {
+    const { error } = await db.from("students").insert(payload);
+    if (error) throw error;
+    $("studentForm").reset();
+    message("Student saved successfully.");
+    await loadStudents();
+  } catch (e) {
+    message("Student was not saved: " + e.message +
+      "\nCheck the student number, required fields, and database permissions.");
+  } finally {
+    setBusy(false);
+  }
+});
+
+$("search").addEventListener("input", renderStudents);
+$("refreshBtn").addEventListener("click", loadStudents);
+
+(function restoreConnection() {
+  $("projectUrl").value = localStorage.getItem("wesley_project_url") || "";
+  $("publishableKey").value = localStorage.getItem("wesley_publishable_key") || "";
+  if ($("projectUrl").value && $("publishableKey").value) {
+    db = window.supabase.createClient(
+      $("projectUrl").value,
+      $("publishableKey").value
+    );
+    show("setup", false);
+    show("login");
+    message("Connection details loaded. Sign in to continue.");
+    db.auth.getSession().then(({ data }) => handleSession(data.session));
+    db.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => handleSession(session), 0);
+    });
+  }
+})();
+</script>
 </body>
-      </html>
+</html>
