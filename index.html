@@ -330,5 +330,193 @@ $("refreshBtn").addEventListener("click", loadStudents);
   }
 })();
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+  const section = document.getElementById("enrolmentSection");
+  const form = document.getElementById("enrolmentForm");
+  const studentSelect = document.getElementById("enrolStudent");
+  const classSelect = document.getElementById("enrolClass");
+  const yearSelect = document.getElementById("enrolYear");
+  const dateInput = document.getElementById("enrolDate");
+  const message = document.getElementById("enrolmentMessage");
+  const list = document.getElementById("enrolmentList");
+
+  if (!section || !form) return;
+
+  dateInput.value = new Date().toISOString().slice(0, 10);
+
+  async function loadEnrolmentData() {
+    message.textContent = "Loading students, classes and academic years...";
+
+    const [studentsResult, classesResult, yearsResult] = await Promise.all([
+      db.from("students")
+        .select("id, student_number, first_name, middle_name, last_name")
+        .order("first_name"),
+      db.from("school_classes")
+        .select("id, class_name")
+        .order("id"),
+      db.from("academic_years")
+        .select("id, year_name, is_current")
+        .order("year_name", { ascending: false })
+    ]);
+
+    if (studentsResult.error || classesResult.error || yearsResult.error) {
+      message.textContent = "Could not load enrolment options. Please check your database permissions and column names.";
+      console.error(studentsResult.error, classesResult.error, yearsResult.error);
+      return;
+    }
+
+    studentSelect.innerHTML = '<option value="">Select a registered student</option>';
+    studentsResult.data.forEach(student => {
+      const option = document.createElement("option");
+      option.value = student.id;
+      option.textContent =
+        [student.student_number, student.first_name, student.middle_name, student.last_name]
+          .filter(Boolean).join(" ");
+      studentSelect.appendChild(option);
+    });
+
+    classSelect.innerHTML = '<option value="">Select a class</option>';
+    classesResult.data.forEach(schoolClass => {
+      const option = document.createElement("option");
+      option.value = schoolClass.id;
+      option.textContent = schoolClass.class_name;
+      classSelect.appendChild(option);
+    });
+
+    yearSelect.innerHTML = '<option value="">Select academic year</option>';
+    yearsResult.data.forEach(year => {
+      const option = document.createElement("option");
+      option.value = year.id;
+      option.textContent = year.year_name + (year.is_current ? " (Current)" : "");
+      yearSelect.appendChild(option);
+    });
+
+    const currentYear = yearsResult.data.find(year => year.is_current);
+    if (currentYear) yearSelect.value = currentYear.id;
+
+    message.textContent = "Enrolment options loaded.";
+    await loadEnrolments();
+  }
+
+  async function loadEnrolments() {
+    list.textContent = "Loading enrolment records...";
+
+    const { data, error } = await db
+      .from("enrolments")
+      .select("id, enrolment_date, status, students(first_name, middle_name, last_name, student_number), school_classes(class_name), academic_years(year_name)")
+      .order("enrolment_date", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      list.textContent = "Could not load enrolment records.";
+      console.error(error);
+      return;
+    }
+
+    if (!data.length) {
+      list.textContent = "No enrolment records yet.";
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+
+    const header = document.createElement("tr");
+    ["Student Number", "Student Name", "Class", "Academic Year", "Date", "Status"].forEach(label => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      th.style.border = "1px solid #ddd";
+      th.style.padding = "8px";
+      header.appendChild(th);
+    });
+    table.appendChild(header);
+
+    data.forEach(record => {
+      const student = record.students || {};
+      const schoolClass = record.school_classes || {};
+      const year = record.academic_years || {};
+      const row = document.createElement("tr");
+
+      [
+        student.student_number || "",
+        [student.first_name, student.middle_name, student.last_name].filter(Boolean).join(" "),
+        schoolClass.class_name || "",
+        year.year_name || "",
+        record.enrolment_date || "",
+        record.status || ""
+      ].forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        cell.style.border = "1px solid #ddd";
+        cell.style.padding = "8px";
+        row.appendChild(cell);
+      });
+
+      table.appendChild(row);
+    });
+
+    list.replaceChildren(table);
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    message.textContent = "Saving enrolment...";
+
+    const studentId = studentSelect.value;
+    const classId = classSelect.value;
+    const yearId = yearSelect.value;
+    const enrolmentDate = dateInput.value;
+
+    if (!studentId || !classId || !yearId || !enrolmentDate) {
+      message.textContent = "Please complete all fields.";
+      return;
+    }
+
+    const { error } = await db.from("enrolments").insert({
+      student_id: studentId,
+      class_id: classId,
+      academic_year_id: yearId,
+      enrolment_date: enrolmentDate
+    });
+
+    if (error) {
+      console.error(error);
+      message.textContent = error.code === "23505"
+        ? "This student may already be enrolled for this academic year."
+        : "Could not save enrolment. Please check the database error.";
+      return;
+    }
+
+    message.textContent = "Student enrolment saved successfully!";
+    form.reset();
+    dateInput.value = new Date().toISOString().slice(0, 10);
+    await loadEnrolmentData();
+  });
+
+  // Display the section only when an active administrator is signed in.
+  db.auth.onAuthStateChange(async function (_event, session) {
+    if (!session) {
+      section.style.display = "none";
+      return;
+    }
+
+    const { data: profile, error } = await db
+      .from("staff_profiles")
+      .select("role, is_active")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (error || !profile || profile.role !== "Administrator" || profile.is_active !== true) {
+      section.style.display = "none";
+      return;
+    }
+
+    section.style.display = "block";
+    await loadEnrolmentData();
+  });
+});
+</script>
 </body>
 </html>
