@@ -675,5 +675,42 @@ document.getElementById("loadFeesButton").addEventListener("click", async () => 
 
 loadFeeOptions();
 </script>
+<section id="studentInvoiceSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
+  <h2>Student Invoice Generation</h2>
+  <p>Select an enrolled student and term to prepare an invoice.</p>
+
+  <label for="invoiceStudent">Student:</label>
+  <select id="invoiceStudent">
+    <option value="">Select Student</option>
+  </select>
+
+  <label for="invoiceTerm">Academic Term:</label>
+  <select id="invoiceTerm">
+    <option value="">Select Term</option>
+  </select>
+
+  <button type="button" id="generateInvoiceButton">Generate Invoice</button>
+
+  <p id="invoiceMessage"></p>
+
+  <div id="invoiceDetails" style="display:none; margin-top:20px;">
+    <h3>Invoice Details</h3>
+    <p><strong>Invoice Number:</strong> <span id="invoiceNumberDisplay"></span></p>
+    <p><strong>Student:</strong> <span id="invoiceStudentDisplay"></span></p>
+    <p><strong>Term:</strong> <span id="invoiceTermDisplay"></span></p>
+
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:8px; border-bottom:1px solid #ccc;">Fee Item</th>
+          <th style="text-align:right; padding:8px; border-bottom:1px solid #ccc;">Amount (GH₵)</th>
+        </tr>
+      </thead>
+      <tbody id="invoiceItemsDisplay"></tbody>
+    </table>
+
+    <h3>Total Due: GH₵ <span id="invoiceTotalDisplay">0.00</span></h3>
+  </div>
+</section>
 </body>
 </html>
