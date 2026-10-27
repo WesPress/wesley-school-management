@@ -553,5 +553,37 @@ document.addEventListener("DOMContentLoaded", async function () {
   <div id="enrolmentList">Enrolment records will appear here.</div>
 </section>
 <!-- END STUDENT CLASS ENROLMENT SECTION -->
+<section id="feeManagementSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
+  <h2>School Fee Management</h2>
+  <p>View the fees assigned to each class and term.</p>
+
+  <label for="feeClass">Select Class:</label>
+  <select id="feeClass">
+    <option value="">Loading classes...</option>
+  </select>
+
+  <label for="feeTerm">Select Term:</label>
+  <select id="feeTerm">
+    <option value="">Loading terms...</option>
+  </select>
+
+  <button type="button" id="loadFeesButton">View Fees</button>
+
+  <p id="feeMessage"></p>
+
+  <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px; border-bottom:1px solid #ccc;">Fee Item</th>
+        <th style="text-align:right; padding:8px; border-bottom:1px solid #ccc;">Amount (GH₵)</th>
+      </tr>
+    </thead>
+    <tbody id="feeResults">
+      <tr><td colspan="2">Select a class and term to view fees.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Total: GH₵ <span id="feeTotal">0.00</span></h3>
+</section>
 </body>
 </html>
