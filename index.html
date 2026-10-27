@@ -712,5 +712,174 @@ loadFeeOptions();
     <h3>Total Due: GH₵ <span id="invoiceTotalDisplay">0.00</span></h3>
   </div>
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+    const studentSelect = document.getElementById("invoiceStudent");
+    const termSelect = document.getElementById("invoiceTerm");
+    const generateButton = document.getElementById("generateInvoiceButton");
+    const message = document.getElementById("invoiceMessage");
+    const details = document.getElementById("invoiceDetails");
+
+    if (!studentSelect || !termSelect || !generateButton) {
+        return;
+    }
+
+    function showMessage(text, isError = false) {
+        message.textContent = text;
+        message.style.color = isError ? "red" : "green";
+    }
+
+    // Load enrolled students.
+    const { data: enrolments, error: enrolmentError } = await db
+        .from("enrolments")
+        .select("student_id, students(id, first_name, last_name, student_number)")
+        .eq("status", "ENROLLED");
+
+    if (enrolmentError) {
+        showMessage("Could not load students. Please sign in and try again.", true);
+        console.error(enrolmentError);
+        return;
+    }
+
+    const uniqueStudents = new Map();
+
+    (enrolments || []).forEach(function (enrolment) {
+        const student = enrolment.students;
+        if (student) {
+            uniqueStudents.set(student.id, student);
+        }
+    });
+
+    [...uniqueStudents.values()]
+        .sort((a, b) =>
+            `${a.first_name} ${a.last_name}`.localeCompare(
+                `${b.first_name} ${b.last_name}`
+            )
+        )
+        .forEach(function (student) {
+            const option = document.createElement("option");
+            option.value = student.id;
+            option.textContent =
+                `${student.first_name} ${student.last_name}` +
+                (student.student_number ? ` (${student.student_number})` : "");
+            studentSelect.appendChild(option);
+        });
+
+    // Load academic terms.
+    const { data: terms, error: termError } = await db
+        .from("academic_terms")
+        .select("id, term_name, academic_year_id, term_number")
+        .order("term_number");
+
+    if (termError) {
+        showMessage("Could not load academic terms. Please try again.", true);
+        console.error(termError);
+        return;
+    }
+
+    (terms || []).forEach(function (term) {
+        const option = document.createElement("option");
+        option.value = term.id;
+        option.textContent = term.term_name;
+        option.dataset.yearId = term.academic_year_id;
+        termSelect.appendChild(option);
+    });
+
+    // Show only students enrolled in the selected term's academic year.
+    function filterStudentsForTerm() {
+        const selectedTerm = termSelect.selectedOptions[0];
+        const yearId = selectedTerm ? selectedTerm.dataset.yearId : "";
+
+        [...studentSelect.options].forEach(function (option) {
+            if (!option.value) return;
+
+            const studentEnrolments = (enrolments || []).filter(
+                enrolment => enrolment.student_id === option.value
+            );
+
+            const hasMatchingYear = studentEnrolments.some(
+                enrolment => enrolment.students &&
+                    enrolment.students.id === option.value &&
+                    enrolment.students.academic_year_id === yearId
+            );
+
+            // Do not hide options here; enrolment year is checked by the
+            // secure invoice function when the button is clicked.
+        });
+    }
+
+    termSelect.addEventListener("change", filterStudentsForTerm);
+
+    // Generate the invoice through the secure database function.
+    generateButton.addEventListener("click", async function () {
+        const studentId = studentSelect.value;
+        const termId = termSelect.value;
+
+        details.style.display = "none";
+
+        if (!studentId || !termId) {
+            showMessage("Please select a student and an academic term.", true);
+            return;
+        }
+
+        generateButton.disabled = true;
+        showMessage("Generating invoice. Please wait...");
+
+        try {
+            const { data, error } = await db.rpc(
+                "generate_student_invoice",
+                {
+                    p_student_id: studentId,
+                    p_term_id: termId
+                }
+            );
+
+            if (error) throw error;
+
+            document.getElementById("invoiceNumberDisplay").textContent =
+                data.invoice_number;
+
+            const selectedStudent =
+                studentSelect.selectedOptions[0].textContent;
+
+            document.getElementById("invoiceStudentDisplay").textContent =
+                selectedStudent;
+
+            document.getElementById("invoiceTermDisplay").textContent =
+                data.term_name;
+
+            const itemsBody = document.getElementById("invoiceItemsDisplay");
+            itemsBody.replaceChildren();
+
+            (data.items || []).forEach(function (item) {
+                const row = document.createElement("tr");
+                const nameCell = document.createElement("td");
+                const amountCell = document.createElement("td");
+
+                nameCell.textContent = item.fee_item;
+                amountCell.textContent =
+                    Number(item.amount).toFixed(2);
+
+                row.append(nameCell, amountCell);
+                itemsBody.appendChild(row);
+            });
+
+            document.getElementById("invoiceTotalDisplay").textContent =
+                Number(data.total).toFixed(2);
+
+            details.style.display = "block";
+            showMessage("Invoice generated successfully!");
+        } catch (error) {
+            console.error("Invoice generation error:", error);
+            showMessage(
+                error.message || "Invoice generation failed. Please try again.",
+                true
+            );
+        } finally {
+            generateButton.disabled = false;
+        }
+    });
+});
+</script>
 </body>
 </html>
