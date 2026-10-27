@@ -518,5 +518,40 @@ document.addEventListener("DOMContentLoaded", async function () {
   });
 });
 </script>
+<!-- STUDENT CLASS ENROLMENT SECTION -->
+<section id="enrolmentSection" style="max-width:900px;margin:30px auto;padding:20px;background:#fff;border:1px solid #ddd;border-radius:12px;">
+  <h2>Student Class Enrolment</h2>
+  <p>Wesley Preparatory School — Knowledge and Integrity</p>
+
+  <form id="enrolmentForm">
+    <label for="enrolStudent">Select Student</label>
+    <select id="enrolStudent" required style="display:block;width:100%;padding:12px;margin:8px 0 18px;">
+      <option value="">Select a registered student</option>
+    </select>
+
+    <label for="enrolClass">Select Class</label>
+    <select id="enrolClass" required style="display:block;width:100%;padding:12px;margin:8px 0 18px;">
+      <option value="">Select a class</option>
+    </select>
+
+    <label for="enrolYear">Academic Year</label>
+    <select id="enrolYear" required style="display:block;width:100%;padding:12px;margin:8px 0 18px;">
+      <option value="">Select academic year</option>
+    </select>
+
+    <label for="enrolDate">Enrolment Date</label>
+    <input id="enrolDate" type="date" required style="display:block;width:100%;padding:12px;margin:8px 0 18px;box-sizing:border-box;">
+
+    <button type="submit" style="padding:12px 20px;background:#14532d;color:white;border:0;border-radius:6px;">
+      Save Enrolment
+    </button>
+  </form>
+
+  <p id="enrolmentMessage" role="status"></p>
+
+  <h3>Student Enrolment List</h3>
+  <div id="enrolmentList">Enrolment records will appear here.</div>
+</section>
+<!-- END STUDENT CLASS ENROLMENT SECTION -->
 </body>
 </html>
