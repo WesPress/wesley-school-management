@@ -586,6 +586,94 @@ document.addEventListener("DOMContentLoaded", async function () {
   <h3>Total: GH₵ <span id="feeTotal">0.00</span></h3>
 </section>
 <script>
+  const feeClass = document.getElementById("feeClass");
+const feeTerm = document.getElementById("feeTerm");
+const feeResults = document.getElementById("feeResults");
+const feeTotal = document.getElementById("feeTotal");
+const feeMessage = document.getElementById("feeMessage");
+
+async function loadFeeOptions() {
+  feeMessage.textContent = "Loading classes and terms...";
+
+  const { data: classes, error: classError } =
+    await db.from("school_classes")
+      .select("id, class_name")
+      .order("class_name");
+
+  const { data: terms, error: termError } =
+    await db.from("academic_terms")
+      .select("id, term_name")
+      .order("term_name");
+
+  if (classError || termError) {
+    feeMessage.textContent =
+      "Could not load classes or terms. Please check your connection and permissions.";
+    return;
+  }
+
+  feeClass.innerHTML = '<option value="">Select Class</option>';
+  feeTerm.innerHTML = '<option value="">Select Term</option>';
+
+  classes.forEach(item => {
+    feeClass.add(new Option(item.class_name, item.id));
+  });
+
+  terms.forEach(item => {
+    feeTerm.add(new Option(item.term_name, item.id));
+  });
+
+  feeMessage.textContent = "";
+}
+
+document.getElementById("loadFeesButton").addEventListener("click", async () => {
+  if (!feeClass.value || !feeTerm.value) {
+    feeMessage.textContent = "Please select a class and term.";
+    return;
+  }
+
+  feeMessage.textContent = "Loading fees...";
+  feeResults.innerHTML = "";
+  feeTotal.textContent = "0.00";
+
+  const { data, error } = await db
+    .from("fee_structures")
+    .select("amount, fee_items(fee_name)")
+    .eq("class_id", feeClass.value)
+    .eq("term_id", feeTerm.value);
+
+  if (error) {
+    feeMessage.textContent =
+      "Could not load fees. Please check your Supabase permissions.";
+    return;
+  }
+
+  let total = 0;
+
+  data.forEach(item => {
+    const amount = Number(item.amount);
+    total += amount;
+
+    const row = document.createElement("tr");
+    const nameCell = document.createElement("td");
+    const amountCell = document.createElement("td");
+
+    nameCell.textContent = item.fee_items?.fee_name || "Fee";
+    nameCell.style.padding = "8px";
+    amountCell.textContent = amount.toFixed(2);
+    amountCell.style.padding = "8px";
+    amountCell.style.textAlign = "right";
+
+    row.append(nameCell, amountCell);
+    feeResults.appendChild(row);
+  });
+
+  feeTotal.textContent = total.toFixed(2);
+  feeMessage.textContent = data.length
+    ? "Fees loaded successfully."
+    : "No fees found for this class and term.";
+});
+
+loadFeeOptions();
 </script>
 </body>
 </html>
