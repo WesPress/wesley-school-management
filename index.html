@@ -730,40 +730,26 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // Load enrolled students.
-    const { data: enrolments, error: enrolmentError } = await db
-        .from("enrolments")
-        .select("student_id, students(id, first_name, last_name, student_number)")
-        .eq("status", "ENROLLED");
+    // Load students directly from the students table.
+    const { data: students, error: studentsError } = await db
+        .from("students")
+        .select("id, first_name, last_name, student_number")
+        .order("first_name");
 
-    if (enrolmentError) {
+    if (studentsError) {
         showMessage("Could not load students. Please sign in and try again.", true);
-        console.error(enrolmentError);
+        console.error(studentsError);
         return;
     }
 
-    const uniqueStudents = new Map();
-
-    (enrolments || []).forEach(function (enrolment) {
-        const student = enrolment.students;
-        if (student) {
-            uniqueStudents.set(student.id, student);
-        }
+    (students || []).forEach(function (student) {
+        const option = document.createElement("option");
+        option.value = student.id;
+        option.textContent =
+            `${student.first_name} ${student.last_name}` +
+            (student.student_number ? ` (${student.student_number})` : "");
+        studentSelect.appendChild(option);
     });
-
-    [...uniqueStudents.values()]
-        .sort((a, b) =>
-            `${a.first_name} ${a.last_name}`.localeCompare(
-                `${b.first_name} ${b.last_name}`
-            )
-        )
-        .forEach(function (student) {
-            const option = document.createElement("option");
-            option.value = student.id;
-            option.textContent =
-                `${student.first_name} ${student.last_name}` +
-                (student.student_number ? ` (${student.student_number})` : "");
-            studentSelect.appendChild(option);
-        });
 
     // Load academic terms.
     const { data: terms, error: termError } = await db
