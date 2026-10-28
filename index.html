@@ -986,7 +986,45 @@ document.getElementById("loadInvoicesButton")
     }
   });
 </script>
-</body>
-</html>
+  
+<section id="paymentRecordingSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
+  <h2>Payment Recording</h2>
+  <p>Record full or partial payments against a student's invoice.</p>
+
+  <label for="paymentStudent">Student:</label><br>
+  <select id="paymentStudent" style="width:100%; padding:8px; margin:6px 0 12px;">
+    <option value="">Select Student</option>
+  </select><br>
+
+  <label for="paymentInvoice">Invoice:</label><br>
+  <select id="paymentInvoice" style="width:100%; padding:8px; margin:6px 0 12px;" disabled>
+    <option value="">Select Invoice</option>
+  </select><br>
+
+  <p id="paymentInvoiceInfo"></p>
+
+  <label for="paymentDate">Payment Date:</label><br>
+  <input type="date" id="paymentDate" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+
+  <label for="paymentAmount">Amount Paid (GH₵):</label><br>
+  <input type="number" id="paymentAmount" min="0.01" step="0.01" placeholder="Enter amount paid" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+
+  <label for="paymentMethod">Payment Method:</label><br>
+  <select id="paymentMethod" style="width:100%; padding:8px; margin:6px 0 12px;">
+    <option value="">Select Method</option>
+    <option value="Cash">Cash</option>
+    <option value="Mobile Money">Mobile Money</option>
+    <option value="Other">Other</option>
+  </select><br>
+
+  <label for="paymentReference">Transaction Reference (optional):</label><br>
+  <input type="text" id="paymentReference" placeholder="Mobile Money reference" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+
+  <label for="paymentNote">Note (optional):</label><br>
+  <textarea id="paymentNote" rows="3" placeholder="Additional details" style="width:100%; padding:8px; margin:6px 0 12px;"></textarea><br>
+
+  <button type="button" id="recordPaymentButton">Record Payment</button>
+  <p id="paymentMessage"></p>
+</section>
 </body>
 </html>
