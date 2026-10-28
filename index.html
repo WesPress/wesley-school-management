@@ -714,6 +714,31 @@ document.getElementById("loadFeesButton").addEventListener("click", async () => 
     <h3>Total Due: GH₵ <span id="invoiceTotalDisplay">0.00</span></h3>
   </div>
 </section>
+  <section id="invoiceListSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
+  <h2>Invoice List</h2>
+  <p>View invoices already created for students.</p>
+
+  <button type="button" id="loadInvoicesButton">
+    Load Invoices
+  </button>
+
+  <p id="invoiceListMessage"></p>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>Invoice Number</th>
+          <th>Student</th>
+          <th>Term</th>
+          <th>Amount (GH₵)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="invoiceListBody"></tbody>
+    </table>
+  </div>
+</section>
 <script>
 window.loadInvoiceDropdowns = async function () {
       if (!db) {
@@ -873,5 +898,92 @@ window.loadInvoiceDropdowns = async function () {
     });
 };
 </script>
+
+<script>
+document.getElementById("loadInvoicesButton")
+  .addEventListener("click", async function () {
+    const message = document.getElementById("invoiceListMessage");
+    const body = document.getElementById("invoiceListBody");
+    const button = document.getElementById("loadInvoicesButton");
+
+    if (!db) {
+      message.textContent = "Please connect and sign in first.";
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = "Loading invoices...";
+    body.replaceChildren();
+
+    try {
+      const { data: invoices, error } = await db
+        .from("invoices")
+        .select("id, invoice_number, student_id, term_id, status")
+        .order("invoice_date", { ascending: false });
+
+      if (error) throw error;
+
+      if (!invoices || invoices.length === 0) {
+        message.textContent = "No invoices found.";
+        return;
+      }
+
+      const { data: students, error: studentError } = await db
+        .from("students")
+        .select("id, first_name, last_name, student_number");
+
+      if (studentError) throw studentError;
+
+      const { data: terms, error: termError } = await db
+        .from("academic_terms")
+        .select("id, term_name");
+
+      if (termError) throw termError;
+
+      const { data: items, error: itemError } = await db
+        .from("invoice_items")
+        .select("invoice_id, amount");
+
+      if (itemError) throw itemError;
+
+      invoices.forEach(function (invoice) {
+        const student = students.find(s => s.id === invoice.student_id);
+        const term = terms.find(t => t.id === invoice.term_id);
+        const total = items
+          .filter(item => item.invoice_id === invoice.id)
+          .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+        const row = document.createElement("tr");
+
+        [
+          invoice.invoice_number,
+          student
+            ? `${student.first_name} ${student.last_name}`
+            : "Unknown student",
+          term ? term.term_name : "Unknown term",
+          `GH₵ ${total.toFixed(2)}`,
+          invoice.status
+        ].forEach(function (value) {
+          const cell = document.createElement("td");
+          cell.textContent = value ?? "";
+          cell.style.padding = "8px";
+          cell.style.borderBottom = "1px solid #ddd";
+          row.appendChild(cell);
+        });
+
+        body.appendChild(row);
+      });
+
+      message.textContent = `Loaded ${invoices.length} invoice(s).`;
+    } catch (error) {
+      console.error("Invoice list error:", error);
+      message.textContent = "Could not load invoices: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
 </body>
 </html>
