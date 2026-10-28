@@ -216,7 +216,10 @@ async function handleSession(session) {
     return;
   }
   try {
-    await checkAdministrator(session.user);
+    await checkAdministrator(session.user); 
+    if (typeof window.loadPaymentStudents === "function") {
+  await window.loadPaymentStudents();
+}
   } catch (e) {
     show("dashboard", false);
     show("registration", false);
