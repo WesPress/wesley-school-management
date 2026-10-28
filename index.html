@@ -200,7 +200,11 @@ async function checkAdministrator(user) {
   show("dashboard");
   show("registration");
   show("studentRecords");
-  await loadStudents();
+await loadStudents();
+
+if (typeof window.loadInvoiceDropdowns === "function") {
+  await window.loadInvoiceDropdowns();
+}
 }
 
 async function handleSession(session) {
@@ -711,7 +715,11 @@ document.getElementById("loadFeesButton").addEventListener("click", async () => 
   </div>
 </section>
 <script>
-document.addEventListener("DOMContentLoaded", async function () {
+window.loadInvoiceDropdowns = async function () {
+      if (!db) {
+        console.log("Invoice dropdowns waiting for database connection.");
+        return;
+    }
     const studentSelect = document.getElementById("invoiceStudent");
     const termSelect = document.getElementById("invoiceTerm");
     const generateButton = document.getElementById("generateInvoiceButton");
@@ -859,11 +867,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                 error.message || "Invoice generation failed. Please try again.",
                 true
             );
-        } finally {
+                } finally {
             generateButton.disabled = false;
         }
     });
-});
+};
 </script>
 </body>
 </html>
