@@ -714,34 +714,6 @@ document.getElementById("loadFeesButton").addEventListener("click", async () => 
     <h3>Total Due: GH₵ <span id="invoiceTotalDisplay">0.00</span></h3>
   </div>
 </section>
-  
-<script>
-document.getElementById("loadInvoicesButton")
-  <section id="invoiceListSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
-  <h2>Invoice List</h2>
-  <p>View invoices already created for students.</p>
-
-  <button type="button" id="loadInvoicesButton">
-    Load Invoices
-  </button>
-
-  <p id="invoiceListMessage"></p>
-
-  <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-      <thead>
-        <tr>
-          <th>Invoice Number</th>
-          <th>Student</th>
-          <th>Term</th>
-          <th>Amount (GH₵)</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="invoiceListBody"></tbody>
-    </table>
-  </div>
-</section>
 <script>
 window.loadInvoiceDropdowns = async function () {
       if (!db) {
@@ -895,136 +867,257 @@ window.loadInvoiceDropdowns = async function () {
                 error.message || "Invoice generation failed. Please try again.",
                 true
             );
-                } finally {
+        } finally {
             generateButton.disabled = false;
         }
-    });
-};
+    };
+});
 </script>
 
-<script>
-document.getElementById("loadInvoicesButton")
-  .addEventListener("click", async function () {
-    const message = document.getElementById("invoiceListMessage");
-    const body = document.getElementById("invoiceListBody");
-    const button = document.getElementById("loadInvoicesButton");
-
-    if (!db) {
-      message.textContent = "Please connect and sign in first.";
-      return;
-    }
-
-    button.disabled = true;
-    message.textContent = "Loading invoices...";
-    body.replaceChildren();
-
-    try {
-      const { data: invoices, error } = await db
-        .from("invoices")
-        .select("id, invoice_number, student_id, term_id, status")
-        .order("invoice_date", { ascending: false });
-
-      if (error) throw error;
-
-      if (!invoices || invoices.length === 0) {
-        message.textContent = "No invoices found.";
-        return;
-      }
-
-      const { data: students, error: studentError } = await db
-        .from("students")
-        .select("id, first_name, last_name, student_number");
-
-      if (studentError) throw studentError;
-
-      const { data: terms, error: termError } = await db
-        .from("academic_terms")
-        .select("id, term_name");
-
-      if (termError) throw termError;
-
-      const { data: items, error: itemError } = await db
-        .from("invoice_items")
-        .select("invoice_id, amount");
-
-      if (itemError) throw itemError;
-
-      invoices.forEach(function (invoice) {
-        const student = students.find(s => s.id === invoice.student_id);
-        const term = terms.find(t => t.id === invoice.term_id);
-        const total = items
-          .filter(item => item.invoice_id === invoice.id)
-          .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-
-        const row = document.createElement("tr");
-
-        [
-          invoice.invoice_number,
-          student
-            ? `${student.first_name} ${student.last_name}`
-            : "Unknown student",
-          term ? term.term_name : "Unknown term",
-          `GH₵ ${total.toFixed(2)}`,
-          invoice.status
-        ].forEach(function (value) {
-          const cell = document.createElement("td");
-          cell.textContent = value ?? "";
-          cell.style.padding = "8px";
-          cell.style.borderBottom = "1px solid #ddd";
-          row.appendChild(cell);
-        });
-
-        body.appendChild(row);
-      });
-
-      message.textContent = `Loaded ${invoices.length} invoice(s).`;
-    } catch (error) {
-      console.error("Invoice list error:", error);
-      message.textContent = "Could not load invoices: " + error.message;
-    } finally {
-      button.disabled = false;
-    }
-  });
-</script>
-  
 <section id="paymentRecordingSection" style="padding:20px; margin:20px 0; border:1px solid #ccc; border-radius:10px;">
   <h2>Payment Recording</h2>
   <p>Record full or partial payments against a student's invoice.</p>
 
   <label for="paymentStudent">Student:</label><br>
-  <select id="paymentStudent" style="width:100%; padding:8px; margin:6px 0 12px;">
+  <select id="paymentStudent" style="width:100%; padding:8px;">
     <option value="">Select Student</option>
-  </select><br>
+  </select><br><br>
 
   <label for="paymentInvoice">Invoice:</label><br>
-  <select id="paymentInvoice" style="width:100%; padding:8px; margin:6px 0 12px;" disabled>
+  <select id="paymentInvoice" style="width:100%; padding:8px;" disabled>
     <option value="">Select Invoice</option>
   </select><br>
 
   <p id="paymentInvoiceInfo"></p>
 
   <label for="paymentDate">Payment Date:</label><br>
-  <input type="date" id="paymentDate" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+  <input type="date" id="paymentDate" style="width:100%; padding:8px;"><br><br>
 
   <label for="paymentAmount">Amount Paid (GH₵):</label><br>
-  <input type="number" id="paymentAmount" min="0.01" step="0.01" placeholder="Enter amount paid" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+  <input type="number" id="paymentAmount" min="0.01" step="0.01" placeholder="Enter amount paid" style="width:100%; padding:8px;"><br><br>
 
   <label for="paymentMethod">Payment Method:</label><br>
-  <select id="paymentMethod" style="width:100%; padding:8px; margin:6px 0 12px;">
+  <select id="paymentMethod" style="width:100%; padding:8px;">
     <option value="">Select Method</option>
     <option value="Cash">Cash</option>
     <option value="Mobile Money">Mobile Money</option>
     <option value="Other">Other</option>
-  </select><br>
+  </select><br><br>
 
   <label for="paymentReference">Transaction Reference (optional):</label><br>
-  <input type="text" id="paymentReference" placeholder="Mobile Money reference" style="width:100%; padding:8px; margin:6px 0 12px;"><br>
+  <input type="text" id="paymentReference" placeholder="Mobile Money reference" style="width:100%; padding:8px;"><br><br>
 
   <label for="paymentNote">Note (optional):</label><br>
-  <textarea id="paymentNote" rows="3" placeholder="Additional details" style="width:100%; padding:8px; margin:6px 0 12px;"></textarea><br>
+  <textarea id="paymentNote" rows="3" placeholder="Additional details" style="width:100%; padding:8px;"></textarea><br><br>
 
   <button type="button" id="recordPaymentButton">Record Payment</button>
   <p id="paymentMessage"></p>
 </section>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+
+  $("paymentDate").value = new Date().toLocaleDateString("en-CA");
+
+  async function loadPaymentStudents() {
+    if (!db) return;
+
+    const studentSelect = $("paymentStudent");
+    studentSelect.replaceChildren(new Option("Loading students...", ""));
+
+    const { data, error } = await db
+      .from("invoices")
+      .select("student_id, students(student_number, first_name, last_name)")
+      .neq("status", "Cancelled")
+      .order("invoice_date", { ascending: false });
+
+    if (error) {
+      $("paymentMessage").textContent =
+        "Could not load students: " + error.message;
+      studentSelect.replaceChildren(new Option("Could not load students", ""));
+      return;
+    }
+
+    const students = new Map();
+    (data || []).forEach(row => {
+      if (row.students) {
+        students.set(row.student_id, row.students);
+      }
+    });
+
+    studentSelect.replaceChildren(new Option("Select Student", ""));
+
+    [...students.entries()].forEach(([id, student]) => {
+      const name = [
+        student.first_name,
+        student.last_name
+      ].filter(Boolean).join(" ");
+
+      studentSelect.add(new Option(
+        name + " (" + (student.student_number || "No number") + ")",
+        id
+      ));
+    });
+  }
+
+  async function loadStudentInvoices() {
+    const studentId = $("paymentStudent").value;
+    const invoiceSelect = $("paymentInvoice");
+
+    invoiceSelect.disabled = true;
+    invoiceSelect.replaceChildren(new Option("Select Invoice", ""));
+    $("paymentInvoiceInfo").textContent = "";
+    $("paymentMessage").textContent = "";
+
+    if (!db || !studentId) return;
+
+    const { data, error } = await db
+      .from("invoices")
+      .select("id, invoice_number, term_id, status, invoice_date, academic_terms(term_name, academic_year_id)")
+      .eq("student_id", studentId)
+      .neq("status", "Cancelled")
+      .order("invoice_date", { ascending: false });
+
+    if (error) {
+      $("paymentMessage").textContent =
+        "Could not load invoices: " + error.message;
+      return;
+    }
+
+    for (const invoice of (data || [])) {
+      const { data: items, error: itemsError } = await db
+        .from("invoice_items")
+        .select("amount, concession_amount")
+        .eq("invoice_id", invoice.id);
+
+      if (itemsError) {
+        $("paymentMessage").textContent =
+          "Could not load invoice amounts: " + itemsError.message;
+        return;
+      }
+
+      const { data: allocations, error: allocationError } = await db
+        .from("payment_allocations")
+        .select("amount, payments!inner(status)")
+        .eq("invoice_id", invoice.id)
+        .eq("payments.status", "Posted");
+
+      if (allocationError) {
+        $("paymentMessage").textContent =
+          "Could not load payment balances: " + allocationError.message;
+        return;
+      }
+
+      const total = (items || []).reduce(
+        (sum, item) => sum + Number(item.amount || 0)
+          - Number(item.concession_amount || 0), 0
+      );
+
+      const paid = (allocations || []).reduce(
+        (sum, allocation) => sum + Number(allocation.amount || 0), 0
+      );
+
+      const balance = Math.max(0, total - paid);
+
+      if (balance > 0) {
+        const term = invoice.academic_terms?.term_name || "Term";
+        const option = new Option(
+          invoice.invoice_number + " — " + term +
+          " — Balance GH₵ " + balance.toFixed(2),
+          invoice.id
+        );
+        option.dataset.balance = balance.toFixed(2);
+        invoiceSelect.add(option);
+      }
+    }
+
+    invoiceSelect.disabled = false;
+
+    if (invoiceSelect.options.length === 1) {
+      invoiceSelect.replaceChildren(
+        new Option("No outstanding invoices", "")
+      );
+      invoiceSelect.disabled = true;
+      $("paymentInvoiceInfo").textContent =
+        "This student has no outstanding invoice.";
+    } else {
+      invoiceSelect.selectedIndex = 0;
+      showInvoiceBalance();
+    }
+  }
+
+  function showInvoiceBalance() {
+    const option = $("paymentInvoice").selectedOptions[0];
+    const balance = option?.dataset?.balance;
+
+    $("paymentInvoiceInfo").textContent = balance
+      ? "Outstanding balance: GH₵ " + Number(balance).toFixed(2)
+      : "";
+  }
+
+  $("paymentStudent").addEventListener("change", loadStudentInvoices);
+  $("paymentInvoice").addEventListener("change", showInvoiceBalance);
+
+  $("recordPaymentButton").addEventListener("click", async function () {
+    if (!db) {
+      $("paymentMessage").textContent =
+        "Please connect to the database and sign in first.";
+      return;
+    }
+
+    const invoiceId = $("paymentInvoice").value;
+    const amount = Number($("paymentAmount").value);
+    const paymentDate = $("paymentDate").value;
+    const method = $("paymentMethod").value;
+
+    if (!invoiceId || !paymentDate || !method ||
+        !Number.isFinite(amount) || amount <= 0) {
+      $("paymentMessage").textContent =
+        "Please select an invoice, date, method, and valid amount.";
+      return;
+    }
+
+    const button = $("recordPaymentButton");
+    button.disabled = true;
+    $("paymentMessage").textContent = "Recording payment...";
+
+    try {
+      const { data, error } = await db.rpc("record_student_payment", {
+        p_invoice_id: invoiceId,
+        p_amount: amount,
+        p_payment_date: paymentDate,
+        p_payment_method: method,
+        p_payment_reference: $("paymentReference").value || null,
+        p_note: $("paymentNote").value || null
+      });
+
+      if (error) throw error;
+
+      $("paymentMessage").textContent =
+        "Payment recorded successfully. Receipt: " +
+        data.receipt_number +
+        ". Paid: GH₵ " + Number(data.total_paid).toFixed(2) +
+        ". Balance: GH₵ " +
+        Number(data.outstanding_balance).toFixed(2) +
+        ". Invoice status: " + data.invoice_status + ".";
+
+      $("paymentAmount").value = "";
+      $("paymentReference").value = "";
+      $("paymentNote").value = "";
+
+      await loadStudentInvoices();
+    } catch (error) {
+      $("paymentMessage").textContent =
+        "Payment failed: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  window.loadPaymentStudents = loadPaymentStudents;
+})();
+</script>
+
 </body>
 </html>
