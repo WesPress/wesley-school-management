@@ -317,8 +317,8 @@ $("refreshBtn").addEventListener("click", loadStudents);
   $("publishableKey").value = localStorage.getItem("wesley_publishable_key") || "";
   if ($("projectUrl").value && $("publishableKey").value) {
     db = window.supabase.createClient(
-      $("projectUrl").value,
-      $("publishableKey").value
+      $("https://ghjtkilqsiwvxezuygqd.supabase.co").value,
+      $("sb_publishable_4AyUID9vblOpLFvjtwHGGQ_hLGp7BZ6").value
     );
     show("setup", false);
     show("login");
